@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    env_file:
+      # 這裡設定的引用只會在Container運行時候才會使用而Build Time時候不會引用。
+      - .env
+    
+    build:
+      context: .                          # 指定Dockerfile所在目錄或URL，他相對於現在docker-compose.yml而言
+      dockerfile: Dockerfile              # 上面相對路徑設定好之後，所在目錄下Dockerfile名稱
+      args:
+        - MY_VIRTUAL_ENV_NAME=$VIRTUAL_ENV_NAME
+        - MY_PYTHON_VERSION=$PYTHON_VERSION
+        - MY_MODE=$APP_MODE
+         
+    image: $IMAGE_NAME:$IMAGE_VER
+    container_name: $CONTAINER_NAME_APP
+
+   
+        
+    # environment:
+    #     - VIRTUAL_ENV_NAME=${VIRTUAL_ENV_NAME}
+
+ 
+    # Overrides default command so things don't shut down after the process ends.
+    # Linux sleep指令 這裡使用infinity，其目的是讓Shell不會自動結束，這樣容器啟動之後也就不會自動關閉了。
+    # 有了這樣設定後續docker exec就可以連上了。
+    # command: sleep infinity
+    command: ["sh", "-c", "/ln_src_code.sh && sleep infinity"] # 這樣執行shell只會一次
+    
+    volumes:
+      - ../..:/workspace:cached
+
+    # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
+    # network_mode: service:db
+
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+  # db:
+  #   image: postgres:latest
+  #   restart: unless-stopped
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   env_file:
+  #       - .env
+
+    # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+volumes:
+  postgres-data:
